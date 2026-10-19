@@ -55,6 +55,15 @@ run = "go run ./cmd/uc"
 description = "Run ucind CLI for managing local Docker-based clusters"
 run = "go run ./cmd/ucind"
 
+[tasks."corrosion:image"]
+description = "Build the Corrosion Docker image"
+run = """
+docker build ${CORROSION_PLATFORM:+--platform "$CORROSION_PLATFORM"} \
+  --build-arg CORROSION_REPO="${CORROSION_REPO:-psviderski/corrosion}" \
+  --build-arg CORROSION_VERSION="${CORROSION_VERSION:-{{vars.corrosion_version}}}" \
+  -t "${CORROSION_IMAGE:-ghcr.io/unlabs-dev/corrosion:${CORROSION_VERSION:-{{vars.corrosion_version}}}}" --target corrosion .
+"""
+
 [tasks."ucind:image"]
 description = "Build the ucind Docker image"
 run = "docker build --build-arg CORROSION_VERSION={{vars.corrosion_version}} -t {{vars.ucind_image}} --target ucind ."

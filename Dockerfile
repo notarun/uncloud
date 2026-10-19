@@ -16,17 +16,20 @@ COPY . .
 RUN GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -o uncloudd ./cmd/uncloudd
 
 
-FROM alpine:${ALPINE_VERSION} AS corrosion-download
+FROM --platform=$BUILDPLATFORM alpine:${ALPINE_VERSION} AS corrosion-download
 ARG TARGETARCH
+ARG TARGETVARIANT
+ARG CORROSION_REPO=psviderski/corrosion
 ARG CORROSION_VERSION
 
-RUN CORROSION_ARCH=$(case "${TARGETARCH}" in \
-      "amd64") echo "x86_64" ;; \
-      "arm64") echo "aarch64" ;; \
-      *) echo "Architecture '${TARGETARCH}' not supported" >&2 && exit 1 ;; \
+RUN CORROSION_TARGET=$(case "${TARGETARCH}/${TARGETVARIANT}" in \
+      amd64/*) echo "x86_64-unknown-linux-gnu" ;; \
+      arm64/*) echo "aarch64-unknown-linux-gnu" ;; \
+      arm/v7) echo "armv7-unknown-linux-gnueabihf" ;; \
+      *) echo "Architecture '${TARGETARCH}/${TARGETVARIANT}' not supported" >&2 && exit 1 ;; \
     esac) \
     && wget -q -O /tmp/corrosion.tar.gz \
-      "https://github.com/psviderski/corrosion/releases/download/v${CORROSION_VERSION}/corrosion-${CORROSION_ARCH}-unknown-linux-gnu.tar.gz" \
+      "https://github.com/${CORROSION_REPO}/releases/download/v${CORROSION_VERSION}/corrosion-${CORROSION_TARGET}.tar.gz" \
     && tar -xzf /tmp/corrosion.tar.gz -C /tmp \
     && install /tmp/corrosion /usr/bin/corrosion \
     && rm /tmp/corrosion.tar.gz /tmp/corrosion
